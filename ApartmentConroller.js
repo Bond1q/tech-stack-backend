@@ -3,10 +3,10 @@ class ApartmentController {
 
 	create = async (req, res) => {
 		try {
-			const {title, rooms, price, description} = req.body
+			const { title, rooms, price, description } = req.body
 			if (this.#stringValidator(title, 99) && this.#numberValidator(+rooms, 0, 9999) &&
 				this.#numberValidator(+price, 0, 999999999999) && description?.length < 999) {
-				const apartment = await Apartment.create({title, rooms, description, price})
+				const apartment = await Apartment.create({ title, rooms, description, price })
 				res.status(200).json(apartment)
 			} else {
 				res.status(400).json("Check your values")
@@ -18,52 +18,60 @@ class ApartmentController {
 
 	getAll = async (req, res) => {
 		try {
-			const {price, rooms} = req.query
+			const { price, rooms } = req.query
 			const roomsCount = {}
 			if (+rooms) {
 				roomsCount["rooms"] = rooms
 			}
 
-			let apartments = await Apartment.find(roomsCount).sort({"price": price})
+			let apartments = await Apartment.find(roomsCount).sort({ "price": price })
 
-			return res.json( this.#apartmentsValuesChanger(JSON.parse(JSON.stringify(apartments))))
+			return res.json(this.#apartmentsValuesChanger(JSON.parse(JSON.stringify(apartments))))
 		} catch (error) {
 			res.status(500).json(error)
 		}
 	}
 
-	async getOne(req, res) {
+	getOne = async (req, res) => {
 		try {
-			const {id} = req.params
+			const { id } = req.params
 			if (!id) {
-				res.status(400).json({message: 'Id has not be detected'})
+				res.status(400).json({ message: 'Id has not be detected' })
 			}
 			const apartment = await Apartment.findById(id)
-			return res.json(this.#apartmentsValuesChanger(JSON.parse(JSON.stringify(apartment))))
+			return res.json(apartment)
 		} catch (error) {
 			res.status(500).json(error)
 		}
 	}
 
-	async update(req, res) {
+	update = async (req, res) => {
 		try {
 			const apartment = req.body
 			if (!apartment._id) {
-				res.status(400).json({message: 'Id has not be detected'})
+				res.status(400).json({ message: 'Id has not be detected' })
 			}
-			const updatedApartment = await Apartment.findByIdAndUpdate(apartment._id, apartment, {new: true})
-			return res.json(this.#apartmentsValuesChanger(JSON.parse(JSON.stringify(updatedApartment))))
+
+			const { title, rooms, price, description } = apartment
+			if (this.#stringValidator(title, 99) && this.#numberValidator(+rooms, 0, 9999) &&
+				this.#numberValidator(+price, 0, 999999999999) && description?.length < 999) {
+				const updatedApartment = await Apartment.findByIdAndUpdate(apartment._id, apartment, { new: true })
+				return res.json(updatedApartment)
+			} else {
+				res.status(400).json("Check your values")
+			}
+
 		} catch (error) {
 			res.status(500).json(error)
 		}
 	}
 
-	 delete = async (req, res) =>  {
+	delete = async (req, res) => {
 		try {
-			const {id} = req.params
+			const { id } = req.params
 			console.log(req.params)
 			if (!id) {
-				res.status(400).json({message: 'Id has not be detected'})
+				res.status(400).json({ message: 'Id has not be detected' })
 			}
 			const apartment = await Apartment.findByIdAndDelete(id)
 			return res.json(apartment)
@@ -76,19 +84,17 @@ class ApartmentController {
 		return str.length < maxLength && str.length > 0;
 	}
 
-	#numberValidator =(number, minValue, maxValue) => {
+	#numberValidator = (number, minValue, maxValue) => {
 		return number < maxValue && number > minValue;
 	}
 
 	#apartmentsValuesChanger = (apartments) => {
-		return  apartments.map(el => {
-			const {_id, __v, ...filteredValues} = el
-			return {...filteredValues, id: _id}
+		return apartments.map(el => {
+			const { _id, __v, ...filteredValues } = el
+			return { ...filteredValues, id: _id }
 		})
 
 	}
 }
-// class Validators{
-//
-// }
+
 export default new ApartmentController()
